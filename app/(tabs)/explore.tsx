@@ -1,112 +1,228 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
+import { useEffect, useState } from "react";
+import { filterByArea, filterByCategory } from "@/src/services/api";
+import RecipeCard from "@/components/RecipeCard";
+import Header from "@/components/Header";
+import { Spacing, Colors } from "@/constants/theme";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const categories = [
+  { name: "Breakfast", emoji: "🍳" },
+  { name: "Seafood", emoji: "🦞" },
+  { name: "Dessert", emoji: "🍰" },
+  { name: "Vegetarian", emoji: "🥗" },
+  { name: "Beef", emoji: "🥩" },
+  { name: "Chicken", emoji: "🍗" },
+];
 
-export default function TabTwoScreen() {
+const areas = [
+  { name: "Italian", emoji: "🇮🇹" },
+  { name: "Mexican", emoji: "🇲🇽" },
+  { name: "Chinese", emoji: "🇨🇳" },
+  { name: "Indian", emoji: "🇮🇳" },
+  { name: "Japanese", emoji: "🇯🇵" },
+  { name: "Thai", emoji: "🇹🇭" },
+];
+
+export default function ExploreScreen() {
+  const [meals, setMeals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadInitialMeals();
+  }, []);
+
+  async function loadInitialMeals() {
+    try {
+      setLoading(true);
+      const data = await filterByCategory("Seafood");
+      setMeals(data);
+      setSelectedCategory("Seafood");
+    } catch (error) {
+      console.error("Error loading meals:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCategorySelect(category: string) {
+    try {
+      setLoading(true);
+      setSelectedCategory(category);
+      setSelectedArea(null);
+      const data = await filterByCategory(category);
+      setMeals(data);
+    } catch (error) {
+      console.error("Error filtering by category:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAreaSelect(area: string) {
+    try {
+      setLoading(true);
+      setSelectedArea(area);
+      setSelectedCategory(null);
+      const data = await filterByArea(area);
+      setMeals(data);
+    } catch (error) {
+      console.error("Error filtering by area:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <>
+      <Header />
+      <ScrollView style={styles.container}>
+      {/* Categories Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🍴 Categories</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipContainer}
+        >
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat.name}
+              style={[
+                styles.chip,
+                selectedCategory === cat.name && styles.chipSelected
+              ]}
+              onPress={() => handleCategorySelect(cat.name)}
+            >
+              <Text style={styles.chipEmoji}>{cat.emoji}</Text>
+              <Text style={[
+                styles.chipText,
+                selectedCategory === cat.name && styles.chipTextSelected
+              ]}>
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Areas Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🌍 Cuisines</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipContainer}
+        >
+          {areas.map((area) => (
+            <TouchableOpacity
+              key={area.name}
+              style={[
+                styles.chip,
+                selectedArea === area.name && styles.chipSelected
+              ]}
+              onPress={() => handleAreaSelect(area.name)}
+            >
+              <Text style={styles.chipEmoji}>{area.emoji}</Text>
+              <Text style={[
+                styles.chipText,
+                selectedArea === area.name && styles.chipTextSelected
+              ]}>
+                {area.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Results Section */}
+      <View style={styles.resultsSection}>
+        <Text style={styles.resultsTitle}>
+          {selectedCategory 
+            ? `${selectedCategory} Recipes` 
+            : selectedArea 
+            ? `${selectedArea} Cuisine` 
+            : "Explore Recipes"}
+        </Text>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : meals.length > 0 ? (
+          meals.map((meal: any) => (
+            <RecipeCard key={meal.idMeal} meal={meal} />
+          ))
+        ) : (
+          <Text style={styles.noResults}>No recipes found</Text>
+        )}
+      </View>
+    </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  section: {
+    marginTop: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    color: Colors.text,
+  },
+  chipContainer: {
+    paddingHorizontal: Spacing.md,
+    gap: 10,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+  },
+  chipSelected: {
+    backgroundColor: Colors.primary,
+  },
+  chipEmoji: {
+    fontSize: 18,
+  },
+  chipText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.text,
+  },
+  chipTextSelected: {
+    color: "#fff",
+  },
+  resultsSection: {
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  resultsTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: Spacing.md,
+    color: Colors.text,
+  },
+  loadingContainer: {
+    padding: Spacing.lg,
+    alignItems: "center",
+  },
+  noResults: {
+    textAlign: "center",
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: Spacing.lg,
   },
 });
